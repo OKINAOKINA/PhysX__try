@@ -1,0 +1,15 @@
+VC++ディレクトリ
+全般
+
+インクルードディレクトリ
+C:\PhysX-4.1\physx\include;C:\PhysX-4.1\physx\source\common\src;C:\PhysX-4.1\physx\samples\sampleframework\framework\include;C:\PhysX-4.1\physx\samples\sampleframework\renderer\include;C:\PhysX-4.1\physx\samples\sampleframework\platform\include;C:\PhysX-4.1\physx\test\common\Utils;C:\PhysX-4.1\physx\source\common\include;C:\PhysX-4.1\physx\source\geomutils\include;C:\PhysX-4.1\physx\source\geomutils\src\contact;C:\PhysX-4.1\physx\source\geomutils\src\common;C:\PhysX-4.1\physx\source\geomutils\src\convex;C:\PhysX-4.1\physx\source\geomutils\src\distance;C:\PhysX-4.1\physx\source\geomutils\src\gjk;C:\PhysX-4.1\physx\source\geomutils\src\intersection;C:\PhysX-4.1\physx\source\geomutils\src\mesh;C:\PhysX-4.1\physx\source\geomutils\src\Ice;C:\PhysX-4.1\physx\source\geomutils\src\hf;C:\PhysX-4.1\physx\source\geomutils\src\pcm;C:\PhysX-4.1\physx\samples\pxtoolkit\include;C:\PhysX-4.1\physx\..\pxshared\include;C:\PhysX-4.1\physx\source\foundation\include;$(IncludePath)C:\PhysX-4.1\physx\include;C:\PhysX-4.1\physx\source\common\src;C:\PhysX-4.1\physx\samples\sampleframework\framework\include;C:\PhysX-4.1\physx\samples\sampleframework\renderer\include;C:\PhysX-4.1\physx\samples\sampleframework\platform\include;C:\PhysX-4.1\physx\test\common\Utils;C:\PhysX-4.1\physx\source\common\include;C:\PhysX-4.1\physx\source\geomutils\include;C:\PhysX-4.1\physx\source\geomutils\src\contact;C:\PhysX-4.1\physx\source\geomutils\src\common;C:\PhysX-4.1\physx\source\geomutils\src\convex;C:\PhysX-4.1\physx\source\geomutils\src\distance;C:\PhysX-4.1\physx\source\geomutils\src\gjk;C:\PhysX-4.1\physx\source\geomutils\src\intersection;C:\PhysX-4.1\physx\source\geomutils\src\mesh;C:\PhysX-4.1\physx\source\geomutils\src\Ice;C:\PhysX-4.1\physx\source\geomutils\src\hf;C:\PhysX-4.1\physx\source\geomutils\src\pcm;C:\PhysX-4.1\physx\samples\pxtoolkit\include;C:\PhysX-4.1\physx\..\pxshared\include;C:\PhysX-4.1\physx\source\foundation\include;$(IncludePath)
+
+ライブラリディレクトリ
+C:\PhysX-4.1\physx\bin\win.x86_64.vc142.mt\release;$(LibraryPath)
+
+
+リンカー
+入力
+
+追加の依存ファイル
+C:\PhysX-4.1\physx\bin\win.x86_64.vc142.mt\release\PhysXExtensions_static_64.lib;C:\PhysX-4.1\physx\bin\win.x86_64.vc142.mt\release\PhysX_64.lib;C:\PhysX-4.1\physx\bin\win.x86_64.vc142.mt\release\PhysXPvdSDK_static_64.lib;C:\PhysX-4.1\physx\bin\win.x86_64.vc142.mt\release\PhysXVehicle_static_64.lib;C:\PhysX-4.1\physx\bin\win.x86_64.vc142.mt\release\PhysXCharacterKinematic_static_64.lib;C:\PhysX-4.1\physx\bin\win.x86_64.vc142.mt\release\PhysXCooking_64.lib;C:\PhysX-4.1\physx\bin\win.x86_64.vc142.mt\release\PhysXCommon_64.lib;C:\PhysX-4.1\physx\bin\win.x86_64.vc142.mt\release\SnippetUtils_static_64.lib;C:\PhysX-4.1\physx\bin\win.x86_64.vc142.mt\release\SnippetRender_static_64.lib;C:\PhysX-4.1\physx\bin\win.x86_64.vc142.mt\release\PhysXFoundation_64.lib;C:\PhysX-4.1\physx\snippets\Graphics\lib\win64\glut\glut32.lib;opengl32.lib;glu32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)
