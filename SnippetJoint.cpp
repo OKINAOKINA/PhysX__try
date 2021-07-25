@@ -103,10 +103,10 @@ PxJoint* createBreakableFixed(PxRigidActor* a0, const PxTransform& t0, PxRigidAc
 PxJoint* createDampedD6(PxRigidActor* a0, const PxTransform& t0, PxRigidActor* a1, const PxTransform& t1, PxReal x)
 {
 	PxD6Joint* j = PxD6JointCreate(*gPhysics, a0, t0, a1, t1);
-	j->setMotion(PxD6Axis::eSWING1, PxD6Motion::eLIMITED);
+	j->setMotion(PxD6Axis::eSWING1,PxD6Motion::eLIMITED);
 	j->setMotion(PxD6Axis::eSWING2, PxD6Motion::eLIMITED);
 	j->setMotion(PxD6Axis::eTWIST, PxD6Motion::eLIMITED);
-	j->setDrive(PxD6Drive::eSLERP, PxD6JointDrive(10000, 10000, FLT_MAX, true));
+	j->setDrive(PxD6Drive::eSLERP, PxD6JointDrive(100, 100, FLT_MAX, true));
 	j->setBreakForce(3e3 * x , 3e4 * x);
 
 	j->setConstraintFlag(PxConstraintFlag::eDRIVE_LIMITS_ARE_FORCES, true);
@@ -134,7 +134,7 @@ typedef PxJoint* (*JointCreateFunction)(PxRigidActor* a0, const PxTransform& t0,
 //	}
 //}
 
-void createChain(const PxVec3 t, const PxGeometry& g, PxReal sep, PxReal xx)
+void createChain(const PxVec3 t, const PxGeometry& g, PxReal sep)
 {
 	//const int x = 5;
 	//const int y = 5;
@@ -228,7 +228,7 @@ void initPhysics(bool /*interactive*/)
 		pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
 	}
 
-	gMaterial = gPhysics->createMaterial(0.999, 0.999, 0.001);
+	gMaterial = gPhysics->createMaterial(0.9, 0.9, 0.1);
 
 	PxRigidStatic* groundPlane = PxCreatePlane(*gPhysics, PxPlane(0,1,0,0), *gMaterial);
 	gScene->addActor(*groundPlane);
@@ -238,10 +238,9 @@ void initPhysics(bool /*interactive*/)
 	//createChain(PxTransform(PxVec3(0.0f, 20.0f, -20.0f)), 5, PxBoxGeometry(2.0f, 0.5f, 0.5f), 4.0f, createDampedD6);
 
 	const PxReal l = 0.5;
-	const PxReal s = 2;
-	const PxReal p = 2.5;
+	const PxReal sep = 2;
 
-	createChain(PxVec3(0, l, 0), PxBoxGeometry(l, l, l), l * s, 0.1 * std::pow(p, 4));
+	createChain(PxVec3(0, l, 4 * l), PxBoxGeometry(l, l, l), l * sep);
 	//createChain(PxVec3(0, l,  0), PxBoxGeometry(l, l, l), l * s, 0.1 * std::pow(p, 0));
 	//createChain(PxVec3(0, l, 10), PxBoxGeometry(l, l, l), l * s, 0.1 * std::pow(p, 1));
 	//createChain(PxVec3(0, l, 20), PxBoxGeometry(l, l, l), l * s, 0.1 * std::pow(p, 2));
@@ -296,7 +295,7 @@ void cleanupPhysics(bool /*interactive*/)
 	}
 	PX_RELEASE(gFoundation);
 	
-	printf("SnippetJoint done.\n");
+	//printf("SnippetJoint done.\n");
 }
 
 void keyPress(unsigned char key, const PxTransform& camera)
