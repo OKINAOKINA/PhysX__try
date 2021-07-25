@@ -59,15 +59,23 @@ PxMaterial*				gMaterial	= NULL;
 
 PxPvd*                  gPvd        = NULL;
 
+PxRigidDynamic* bullet = NULL;
+
 PxReal chainZ = 10.0f;
 
 PxRigidDynamic* createDynamic(const PxTransform& t, const PxGeometry& geometry, const PxVec3& velocity=PxVec3(0))
 {
-	PxRigidDynamic* dynamic = PxCreateDynamic(*gPhysics, t, geometry, *gMaterial, 1000000);
-	dynamic->setAngularDamping(0.5f);
-	dynamic->setLinearVelocity(velocity);
-	gScene->addActor(*dynamic);
-	return dynamic;
+	if (bullet != NULL)
+	{
+		gScene->removeActor(*bullet);
+	}
+	PxTransform s = PxTransform(t.p, t.q * PxQuat(0,sin(PxPi / 4),0,  cos(PxPi / 4)));
+	bullet = PxCreateDynamic(*gPhysics, s, geometry, *gMaterial, 2e20);
+	bullet->setAngularDamping(0.005f);
+	bullet->setLinearVelocity(velocity);
+	bullet->setName("bullet");
+	gScene->addActor(*bullet);
+	return bullet;
 }
 
 // spherical joint limited to an angle of at most pi/4 radians (45 degrees)
@@ -92,18 +100,14 @@ PxJoint* createBreakableFixed(PxRigidActor* a0, const PxTransform& t0, PxRigidAc
 }
 
 // D6 joint with a spring maintaining its position
-PxJoint* createDampedD6(PxRigidActor* a0, const PxTransform& t0, PxRigidActor* a1, const PxTransform& t1)
+PxJoint* createDampedD6(PxRigidActor* a0, const PxTransform& t0, PxRigidActor* a1, const PxTransform& t1, PxReal x)
 {
-	//PxD6Joint* j = PxD6JointCreate(*gPhysics, a0, t0, a1, t1);
-	//j->setMotion(PxD6Axis::eSWING1, PxD6Motion::eFREE);
-	//j->setMotion(PxD6Axis::eSWING2, PxD6Motion::eFREE);
-	//j->setMotion(PxD6Axis::eTWIST, PxD6Motion::eFREE);
-	//j->setDrive(PxD6Drive::eSLERP, PxD6JointDrive(0, 1000, FLT_MAX, true));
-	PxSphericalJoint* j = PxSphericalJointCreate(*gPhysics, a0, t0, a1, t1);
-	j->setLimitCone(PxJointLimitCone(PxPi / 4, PxPi / 4, 0.05f));
-
-	j->setSphericalJointFlag(PxSphericalJointFlag::eLIMIT_ENABLED, true);
-	j->setBreakForce(3e3 , 3e4);
+	PxD6Joint* j = PxD6JointCreate(*gPhysics, a0, t0, a1, t1);
+	j->setMotion(PxD6Axis::eSWING1, PxD6Motion::eLIMITED);
+	j->setMotion(PxD6Axis::eSWING2, PxD6Motion::eLIMITED);
+	j->setMotion(PxD6Axis::eTWIST, PxD6Motion::eLIMITED);
+	j->setDrive(PxD6Drive::eSLERP, PxD6JointDrive(10000, 10000, FLT_MAX, true));
+	j->setBreakForce(3e3 * x , 3e4 * x);
 
 	j->setConstraintFlag(PxConstraintFlag::eDRIVE_LIMITS_ARE_FORCES, true);
 	j->setConstraintFlag(PxConstraintFlag::eDISABLE_PREPROCESSING, true);
@@ -136,9 +140,9 @@ void createChain(const PxVec3 t, const PxGeometry& g, PxReal sep, PxReal xx)
 	//const int y = 5;
 	//const int z = 5;
 
-	const int x = 10;
-	const int y = 40;
-	const int z = 10;
+	const int x = 7;
+	const int y = 21;
+	const int z = 7;
 
 	PxRigidDynamic* chain[x][y][z];
 
@@ -162,38 +166,38 @@ void createChain(const PxVec3 t, const PxGeometry& g, PxReal sep, PxReal xx)
 			{
 
 				if (i < x - 1)
-					createDampedD6(chain[i][j][k], PxTransform(PxVec3(sep / 2, 0, 0)), chain[i + 1][j][k], PxTransform(PxVec3(-sep / 2, 0, 0)));
+					createDampedD6(chain[i][j][k], PxTransform(PxVec3(sep / 2, 0, 0)), chain[i + 1][j][k], PxTransform(PxVec3(-sep / 2, 0, 0)), std::pow(0.95, i + j + k));
 				if (j < y - 1)
-					createDampedD6(chain[i][j][k], PxTransform(PxVec3(0, sep / 2, 0)), chain[i][j + 1][k], PxTransform(PxVec3(0, -sep / 2, 0)));
+					createDampedD6(chain[i][j][k], PxTransform(PxVec3(0, sep / 2, 0)), chain[i][j + 1][k], PxTransform(PxVec3(0, -sep / 2, 0)), std::pow(0.95, i + j + k));
 				if (k < z - 1)
-					createDampedD6(chain[i][j][k], PxTransform(PxVec3(0, 0, sep / 2)), chain[i][j][k + 1], PxTransform(PxVec3(0, 0, -sep / 2)));
+					createDampedD6(chain[i][j][k], PxTransform(PxVec3(0, 0, sep / 2)), chain[i][j][k + 1], PxTransform(PxVec3(0, 0, -sep / 2)), std::pow(0.95, i + j + k));
 
 
 
 				if (i < x - 1 && j < y - 1)
-					createDampedD6(chain[i][j][k], PxTransform(PxVec3(sep / 2, sep / 2, 0)), chain[i + 1][j + 1][k], PxTransform(PxVec3(-sep / 2, -sep / 2, 0)));
+					createDampedD6(chain[i][j][k], PxTransform(PxVec3(sep / 2, sep / 2, 0)), chain[i + 1][j + 1][k], PxTransform(PxVec3(-sep / 2, -sep / 2, 0)), std::pow(0.95, i + j + k));
 				if (j < y - 1 && k < z - 1)
-					createDampedD6(chain[i][j][k], PxTransform(PxVec3(0, sep / 2, sep / 2)), chain[i][j + 1][k + 1], PxTransform(PxVec3(0, -sep / 2, -sep / 2)));
+					createDampedD6(chain[i][j][k], PxTransform(PxVec3(0, sep / 2, sep / 2)), chain[i][j + 1][k + 1], PxTransform(PxVec3(0, -sep / 2, -sep / 2)), std::pow(0.95, i + j + k));
 				if (k < z - 1 && i < x - 1)
-					createDampedD6(chain[i][j][k], PxTransform(PxVec3(sep / 2, 0, sep / 2)), chain[i + 1][j][k + 1], PxTransform(PxVec3(-sep / 2, 0, -sep / 2)));
+					createDampedD6(chain[i][j][k], PxTransform(PxVec3(sep / 2, 0, sep / 2)), chain[i + 1][j][k + 1], PxTransform(PxVec3(-sep / 2, 0, -sep / 2)), std::pow(0.95, i + j + k));
 
 
 				if (i > 1 && j < y - 1)
-					createDampedD6(chain[i][j][k], PxTransform(PxVec3(-sep / 2, sep / 2, 0)), chain[i - 1][j + 1][k], PxTransform(PxVec3(sep / 2, -sep / 2, 0)));
+					createDampedD6(chain[i][j][k], PxTransform(PxVec3(-sep / 2, sep / 2, 0)), chain[i - 1][j + 1][k], PxTransform(PxVec3(sep / 2, -sep / 2, 0)), std::pow(0.95, i + j + k));
 				if (j > 1 && k < z - 1)
-					createDampedD6(chain[i][j][k], PxTransform(PxVec3(0, -sep / 2, sep / 2)), chain[i][j - 1][k + 1], PxTransform(PxVec3(0, sep / 2, -sep / 2)));
+					createDampedD6(chain[i][j][k], PxTransform(PxVec3(0, -sep / 2, sep / 2)), chain[i][j - 1][k + 1], PxTransform(PxVec3(0, sep / 2, -sep / 2)), std::pow(0.95, i + j + k));
 				if (k > 1 && i < x - 1)
-					createDampedD6(chain[i][j][k], PxTransform(PxVec3(sep / 2, 0, -sep / 2)), chain[i + 1][j][k - 1], PxTransform(PxVec3(-sep / 2, 0, sep / 2)));
+					createDampedD6(chain[i][j][k], PxTransform(PxVec3(sep / 2, 0, -sep / 2)), chain[i + 1][j][k - 1], PxTransform(PxVec3(-sep / 2, 0, sep / 2)), std::pow(0.95, i + j + k));
 
 
 				if (i < x - 1 && j < y - 1 && k < z - 1)
-					createDampedD6(chain[i][j][k], PxTransform(PxVec3(sep / 2, sep / 2, sep / 2)), chain[i + 1][j + 1][k + 1], PxTransform(PxVec3(-sep / 2, -sep / 2, -sep / 2)));
+					createDampedD6(chain[i][j][k], PxTransform(PxVec3(sep / 2, sep / 2, sep / 2)), chain[i + 1][j + 1][k + 1], PxTransform(PxVec3(-sep / 2, -sep / 2, -sep / 2)), std::pow(0.95, i + j + k));
 				if (i < x - 1 && j > 1 && k < z - 1)
-					createDampedD6(chain[i][j][k], PxTransform(PxVec3(sep / 2, -sep / 2, sep / 2)), chain[i + 1][j - 1][k + 1], PxTransform(PxVec3(-sep / 2, sep / 2, -sep / 2)));
+					createDampedD6(chain[i][j][k], PxTransform(PxVec3(sep / 2, -sep / 2, sep / 2)), chain[i + 1][j - 1][k + 1], PxTransform(PxVec3(-sep / 2, sep / 2, -sep / 2)), std::pow(0.95, i + j + k));
 				if (i < x - 1 && j < y - 1 && k > 1)
-					createDampedD6(chain[i][j][k], PxTransform(PxVec3(sep / 2, sep / 2, -sep / 2)), chain[i + 1][j + 1][k - 1], PxTransform(PxVec3(-sep / 2, -sep / 2, sep / 2)));
+					createDampedD6(chain[i][j][k], PxTransform(PxVec3(sep / 2, sep / 2, -sep / 2)), chain[i + 1][j + 1][k - 1], PxTransform(PxVec3(-sep / 2, -sep / 2, sep / 2)), std::pow(0.95, i + j + k));
 				if (i < x - 1 && j > 1 && k > 1)
-					createDampedD6(chain[i][j][k], PxTransform(PxVec3(sep / 2, -sep / 2, -sep / 2)), chain[i + 1][j - 1][k - 1], PxTransform(PxVec3(-sep / 2, sep / 2, sep / 2)));
+					createDampedD6(chain[i][j][k], PxTransform(PxVec3(sep / 2, -sep / 2, -sep / 2)), chain[i + 1][j - 1][k - 1], PxTransform(PxVec3(-sep / 2, sep / 2, sep / 2)), std::pow(0.95, i + j + k));
 			}
 		}
 	}
@@ -224,7 +228,7 @@ void initPhysics(bool /*interactive*/)
 		pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
 	}
 
-	gMaterial = gPhysics->createMaterial(0.2, 0.2, 0.2);
+	gMaterial = gPhysics->createMaterial(0.999, 0.999, 0.001);
 
 	PxRigidStatic* groundPlane = PxCreatePlane(*gPhysics, PxPlane(0,1,0,0), *gMaterial);
 	gScene->addActor(*groundPlane);
@@ -246,27 +250,27 @@ void initPhysics(bool /*interactive*/)
 	//createChain(PxVec3(0, l, 50), PxBoxGeometry(l, l, l), l * s, 0.1 * std::pow(p, 5));
 
 	{
-		PxRigidDynamic* wall = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(100, 0, 0)), PxBoxGeometry(10, 200, 200), *gMaterial, 1000000);
+		PxRigidDynamic* wall = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(100, 100, 0)), PxBoxGeometry(10, 100, 100), *gMaterial, 1);
 		wall->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 		gScene->addActor(*wall);
 	}
 	{
-		PxRigidDynamic* wall = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(-100, 0, 0)), PxBoxGeometry(10, 200, 200), *gMaterial, 1000000);
+		PxRigidDynamic* wall = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(-100, 100, 0)), PxBoxGeometry(10, 100, 100), *gMaterial, 1);
 		wall->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 		gScene->addActor(*wall);
 	}
 	{
-		PxRigidDynamic* wall = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0, 0, 100)), PxBoxGeometry(200, 200, 10), *gMaterial, 1000000);
+		PxRigidDynamic* wall = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0, 100, 100)), PxBoxGeometry(100, 100, 10), *gMaterial, 1);
 		wall->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 		gScene->addActor(*wall);
 	}
 	{
-		PxRigidDynamic* wall = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0, 0, -100)), PxBoxGeometry(200, 200, 10), *gMaterial, 1000000);
+		PxRigidDynamic* wall = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0, 100, -100)), PxBoxGeometry(100, 100, 10), *gMaterial, 1);
 		wall->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 		gScene->addActor(*wall);
 	}
 	{
-		PxRigidDynamic* wall = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0, 200, 0)), PxBoxGeometry(200, 10, 200), *gMaterial, 1000000);
+		PxRigidDynamic* wall = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0, 200, 0)), PxBoxGeometry(100, 10, 100), *gMaterial, 1);
 		wall->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 		gScene->addActor(*wall);
 	}
@@ -299,8 +303,8 @@ void keyPress(unsigned char key, const PxTransform& camera)
 {
 	switch (toupper(key))
 	{
-	case ' ':	createDynamic(camera, PxSphereGeometry(2.5f), camera.rotate(PxVec3(0, 0, -1)) * 250);	break;
-	case 'V':	cleanupPhysics(true); initPhysics(true);	break;
+	case ' ':	createDynamic(camera, PxCapsuleGeometry(0.75, 2.5), camera.rotate(PxVec3(0, 0, -1)) * 100);	break;
+	case 'V':	bullet = NULL;  cleanupPhysics(true); initPhysics(true);	break;
 	}
 }
 
